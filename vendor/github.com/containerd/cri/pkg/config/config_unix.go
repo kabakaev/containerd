@@ -55,6 +55,7 @@ func DefaultConfig() PluginConfig {
 		SandboxImage:            "k8s.gcr.io/pause:3.1",
 		StatsCollectPeriod:      10,
 		SystemdCgroup:           false,
+		Sysctl:                  []string{},
 		MaxContainerLogLineSize: 16 * 1024,
 		Registry: Registry{
 			Mirrors: map[string]Mirror{

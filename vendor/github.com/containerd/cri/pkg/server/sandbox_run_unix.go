@@ -131,6 +131,19 @@ func (c *criService) sandboxContainerSpec(id string, config *runtime.PodSandboxC
 
 	// Add sysctls
 	sysctls := config.GetLinux().GetSysctls()
+
+	// add default sysctls from /etc/containerd/config.toml
+	for _, configSysctl := range c.config.Sysctl {
+		kv := strings.SplitN(configSysctl, "=", 2)
+		if _, ok := sysctls[kv[0]]; !ok {
+			if sysctls == nil {
+				sysctls = make(map[string]string)
+			}
+			sysctls[kv[0]] = kv[1]
+		}
+
+	}
+
 	specOpts = append(specOpts, customopts.WithSysctls(sysctls))
 
 	// Note: LinuxSandboxSecurityContext does not currently provide an apparmor profile
