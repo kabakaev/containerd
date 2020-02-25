@@ -134,6 +134,8 @@ type PluginConfig struct {
 	// This only works for runtime type "io.containerd.runtime.v1.linux".
 	// DEPRECATED: config runc runtime handler instead. Remove when shim v1 is deprecated.
 	SystemdCgroup bool `toml:"systemd_cgroup" json:"systemdCgroup"`
+	// Sysctl is the name=falue formatted list of default sysctls in container namespaces
+	Sysctl []string `toml:"sysctl" json:"sysctl"`
 	// EnableTLSStreaming indicates to enable the TLS streaming support.
 	EnableTLSStreaming bool `toml:"enable_tls_streaming" json:"enableTLSStreaming"`
 	// X509KeyPairStreaming is a x509 key pair used for TLS streaming
@@ -198,6 +200,7 @@ func DefaultConfig() PluginConfig {
 		SandboxImage:            "k8s.gcr.io/pause:3.1",
 		StatsCollectPeriod:      10,
 		SystemdCgroup:           false,
+		Sysctl:                  []string{},
 		MaxContainerLogLineSize: 16 * 1024,
 		Registry: Registry{
 			Mirrors: map[string]Mirror{

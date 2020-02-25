@@ -407,6 +407,19 @@ func (c *criService) generateSandboxContainerSpec(id string, config *runtime.Pod
 
 	// Add sysctls
 	sysctls := config.GetLinux().GetSysctls()
+
+	// add default sysctls from /etc/containerd/config.toml
+	for _, configSysctl := range c.config.Sysctl {
+		kv := strings.SplitN(configSysctl, "=", 2)
+		if _, ok := sysctls[kv[0]]; !ok {
+			if sysctls == nil {
+				sysctls = make(map[string]string)
+			}
+			sysctls[kv[0]] = kv[1]
+		}
+
+	}
+
 	for key, value := range sysctls {
 		g.AddLinuxSysctl(key, value)
 	}
