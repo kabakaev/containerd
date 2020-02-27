@@ -20,11 +20,13 @@ package linux
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	eventstypes "github.com/containerd/containerd/api/events"
@@ -48,6 +50,7 @@ import (
 	"github.com/containerd/typeurl"
 	ptypes "github.com/gogo/protobuf/types"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
+	bundleSpecs "github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	bolt "go.etcd.io/bbolt"
@@ -94,6 +97,8 @@ type Config struct {
 	NoShim bool `toml:"no_shim"`
 	// Debug enable debug on the shim
 	ShimDebug bool `toml:"shim_debug"`
+	// Sysctl is name=falue formatted list of default sysctls in container namespaces
+	Sysctl []string `toml:"sysctl"`
 }
 
 // New returns a configured runtime
@@ -165,6 +170,25 @@ func (r *Runtime) Create(ctx context.Context, id string, opts runtime.CreateOpts
 	if err != nil {
 		return nil, err
 	}
+
+	var bundleConfig bundleSpecs.Spec
+	json.Unmarshal(opts.Spec.Value, &bundleConfig)
+	if bundleConfig.Linux.Sysctl == nil {
+		bundleConfig.Linux.Sysctl = make(map[string]string)
+	}
+	//log.G(ctx).WithField("namespace", "k8s.io").Debug(fmt.Sprintf("opts.Spec=%s", string(opts.Spec.Value)))
+	//log.G(ctx).WithField("namespace", "k8s.io").Debug(fmt.Sprintf("defaultSysctls=%v", r.config.Sysctl))
+	for _, s := range r.config.Sysctl {
+		kv := strings.SplitN(s, "=", 2)
+		if _, ok := bundleConfig.Linux.Sysctl[kv[0]]; !ok {
+			bundleConfig.Linux.Sysctl[kv[0]] = kv[1]
+		}
+	}
+	opts.Spec.Value, err = json.Marshal(bundleConfig)
+	if err != nil {
+		return nil, err
+	}
+	//log.G(ctx).WithField("namespace", "k8s.io").Debug(fmt.Sprintf("resultingConfig=%v", bundleConfig))
 
 	bundle, err := newBundle(id,
 		filepath.Join(r.state, namespace),
