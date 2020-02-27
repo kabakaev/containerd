@@ -24,13 +24,13 @@ if [[ $1 != "skip-install" ]] ; then
     go get -u github.com/vbatts/git-validation
     go get -u github.com/kunalkushwaha/ltag
     go get -u github.com/LK4D4/vndr
-    sudo PATH=$PATH GOPATH=$GOPATH script/setup/install-seccomp
+    #sudo PATH=$PATH GOPATH=$GOPATH script/setup/install-seccomp
     sudo PATH=$PATH GOPATH=$GOPATH script/setup/install-runc
     sudo PATH=$PATH GOPATH=$GOPATH script/setup/install-cni
     sudo PATH=$PATH GOPATH=$GOPATH script/setup/install-critools
-    wget https://github.com/checkpoint-restore/criu/archive/v3.13.tar.gz -O /tmp/criu.tar.gz
+    wget https://github.com/checkpoint-restore/criu/archive/v3.7.tar.gz -O /tmp/criu.tar.gz
     tar -C /tmp/ -zxf /tmp/criu.tar.gz
-    pushd /tmp/criu-3.13
+    pushd /tmp/criu-3.7
         sudo make install-criu
     popd
 
@@ -50,9 +50,9 @@ go build -i .
 if [ "$GOOS" = "linux" ]; then make man ; fi
 make build
 make binaries
-make release cri-release
+make release #cri-release
 
 mkdir -p /repo/bin/
-cp -rpf ./releases /root/go/src/github.com/containerd/cri/hack/../_output/ /repo/bin/
+cp -rpvf ./releases /root/go/src/github.com/containerd/cri/hack/../_output/ /repo/bin/
 
 fi
